@@ -90,10 +90,4 @@ data <- lubridate::dmy(data_extraida)
 
 ---
 
-## 👨‍💻 Autor
-
-👤 **José Tenório Abs Junior**  
-📧 [Seu Email]  
-🏛 **IBPAD - Instituto Brasileiro de Pesquisa e Análise de Dados**  
-
 🚀 **Agora você pode coletar notícias automaticamente!** Qualquer dúvida, me avise! 😊
