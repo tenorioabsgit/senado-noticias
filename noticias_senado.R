@@ -1,0 +1,50 @@
+library(rvest)
+library(tidyverse)
+
+#### termo a ser pesquisado
+
+termo_pesquisa <- 'Fernando Collor'
+termo_pesquisa <- str_replace_all(string = termo_pesquisa,
+                                  pattern = ' ',
+                                  replacement = '+')
+
+#### busca links das materias
+
+intervalo_urls <- seq(from = 0L,
+                      to = 2010,
+                      by = 30)
+
+base_links <- data.frame()
+for (i in intervalo_urls) {
+  link <- paste0('https://www12.senado.leg.br/noticias/busca?b_start:int=',i,'&SearchableText=',termo_pesquisa)
+  lista <- as.data.frame(read_html(link) %>% html_nodes('a') %>% html_attr('href'))
+  colnames(lista) <- 'link_col'
+  busca_link <- lista %>% filter(str_detect(link_col, 'https://www12.senado.leg.br/noticias/materias/'))
+  base_links <- bind_rows(base_links,busca_link)
+}
+
+#### faz as raspagens e monta o dataframe 
+
+base_final <- data.frame()
+for (i in 1:nrow(base_links)) {
+  link_materia <- base_links$link_col[i]
+  titulo <- read_html(link_materia) %>% html_nodes('h1') %>% html_text()
+  conteudo <- read_html(link_materia) %>% html_nodes('p') %>% html_text()
+  data <- regmatches(conteudo[2], gregexpr("[[:digit:]]+", conteudo[2]))
+  data <- lubridate::as_date(paste0(data[[1]][2],'-',data[[1]][2],'-',data[[1]][1]))
+  tamanho_conteudo <- length(conteudo)
+  conteudo <- str_flatten(conteudo[3:(tamanho_conteudo-4)])
+  base_passagem <- data.frame(data,titulo,conteudo,link_materia)
+  base_final <- bind_rows(base_final, base_passagem)
+}
+
+base_final <- base_final %>% filter(str_detect(conteudo, str_replace_all(string = termo_pesquisa,
+                                                                         pattern = '\\+',
+                                                                         replacement = ' ')))
+#### salva a base
+
+# termo_pesquisa <- str_replace_all(string = termo_pesquisa,
+#                                    pattern = '+',
+#                                    replacement = '_')
+
+# write.csv(base_final, paste0('base_final_',termo_pesquisa,'.csv') 
